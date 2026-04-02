@@ -1,5 +1,6 @@
 package com.finance.dashboard.service;
 
+import com.finance.dashboard.dto.DashboardResponseDTO;
 import com.finance.dashboard.dto.FinancialRecordRequestDTO;
 import com.finance.dashboard.dto.FinancialRecordResponseDTO;
 import com.finance.dashboard.enums.Category;
@@ -17,4 +18,6 @@ public interface FinancialRecordService {
             Category category,
             Pageable pageable
     );
+
+    DashboardResponseDTO getDashboard();
 }

@@ -1,6 +1,7 @@
 package com.finance.dashboard.controller;
 
 import com.finance.dashboard.dto.ApiResponse;
+import com.finance.dashboard.dto.DashboardResponseDTO;
 import com.finance.dashboard.dto.FinancialRecordRequestDTO;
 import com.finance.dashboard.dto.FinancialRecordResponseDTO;
 import com.finance.dashboard.enums.Category;
@@ -37,6 +38,15 @@ public class FinancialRecordController {
                 .success(true)
                 .message("Records fetched")
                 .data(service.getRecords(type, category, pageable))
+                .build();
+    }
+
+    @GetMapping("/dashboard")
+    public ApiResponse<DashboardResponseDTO> getDashboard() {
+        return ApiResponse.<DashboardResponseDTO>builder()
+                .success(true)
+                .message("Dashboard fetched")
+                .data(service.getDashboard())
                 .build();
     }
 }

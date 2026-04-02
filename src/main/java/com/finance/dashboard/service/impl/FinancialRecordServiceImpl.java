@@ -1,5 +1,6 @@
 package com.finance.dashboard.service.impl;
 
+import com.finance.dashboard.dto.DashboardResponseDTO;
 import com.finance.dashboard.dto.FinancialRecordRequestDTO;
 import com.finance.dashboard.dto.FinancialRecordResponseDTO;
 import com.finance.dashboard.entity.FinancialRecord;
@@ -16,6 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -93,5 +97,40 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
                 .getContext()
                 .getAuthentication()
                 .getPrincipal();
+    }
+
+    @Override
+    public DashboardResponseDTO getDashboard() {
+
+        String userId = getCurrentUserId();
+        UUID uid = UUID.fromString(userId);
+
+        Double income = repository.getTotalIncome(uid);
+        Double expense = repository.getTotalExpense(uid);
+
+        Double net = income - expense;
+
+        // 🔹 Category Summary
+        var categoryData = repository.getCategorySummary(uid);
+        Map<String, Double> categoryMap = new HashMap<>();
+
+        for (Object[] row : categoryData) {
+            categoryMap.put(row[0].toString(), (Double) row[1]);
+        }
+
+        // 🔹 Recent Transactions
+        var recent = repository
+                .findTop5ByUserIdAndIsDeletedFalseOrderByDateDesc(uid)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+
+        return DashboardResponseDTO.builder()
+                .totalIncome(income)
+                .totalExpense(expense)
+                .netBalance(net)
+                .categorySummary(categoryMap)
+                .recentTransactions(recent)
+                .build();
     }
 }

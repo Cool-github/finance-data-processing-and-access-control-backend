@@ -6,7 +6,9 @@ import com.finance.dashboard.enums.RecordType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface FinancialRecordRepository extends JpaRepository<FinancialRecord, UUID> {
@@ -22,4 +24,15 @@ public interface FinancialRecordRepository extends JpaRepository<FinancialRecord
             UUID userId,
             Pageable pageable
     );
+
+    @Query("SELECT COALESCE(SUM(f.amount), 0) FROM FinancialRecord f WHERE f.user.id = :userId AND f.type = 'INCOME' AND f.isDeleted = false")
+    Double getTotalIncome(UUID userId);
+
+    @Query("SELECT COALESCE(SUM(f.amount), 0) FROM FinancialRecord f WHERE f.user.id = :userId AND f.type = 'EXPENSE' AND f.isDeleted = false")
+    Double getTotalExpense(UUID userId);
+
+    @Query("SELECT f.category, SUM(f.amount) FROM FinancialRecord f WHERE f.user.id = :userId AND f.isDeleted = false GROUP BY f.category")
+    List<Object[]> getCategorySummary(UUID userId);
+
+    List<FinancialRecord> findTop5ByUserIdAndIsDeletedFalseOrderByDateDesc(UUID userId);
 }
