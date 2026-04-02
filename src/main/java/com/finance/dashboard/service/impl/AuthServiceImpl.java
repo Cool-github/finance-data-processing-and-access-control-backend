@@ -1,4 +1,4 @@
-package com.finance.dashboard.repository.impl;
+package com.finance.dashboard.service.impl;
 
 import com.finance.dashboard.dto.AuthRequestDTO;
 import com.finance.dashboard.dto.AuthResponseDTO;
