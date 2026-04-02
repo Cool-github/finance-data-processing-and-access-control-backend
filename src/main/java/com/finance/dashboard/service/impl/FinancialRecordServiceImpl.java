@@ -133,4 +133,48 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
                 .recentTransactions(recent)
                 .build();
     }
+
+    @Override
+    public void deleteRecord(UUID id) {
+
+        String userId = getCurrentUserId();
+        UUID uid = UUID.fromString(userId);
+
+        FinancialRecord record = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Record not found"));
+
+        // Ensure user owns record
+        if (!uid.equals(record.getUser().getId())) {
+            throw new RuntimeException("Access denied");
+        }
+
+        record.setDeleted(true);
+        record.setDeletedAt(java.time.LocalDateTime.now());
+
+        repository.save(record);
+    }
+
+    @Override
+    public FinancialRecordResponseDTO updateRecord(UUID id, FinancialRecordRequestDTO request) {
+
+        String userId = getCurrentUserId();
+        UUID uid = UUID.fromString(userId);
+
+        FinancialRecord record = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Record not found"));
+
+        if (!record.getUser().getId().equals(uid)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        record.setAmount(request.getAmount());
+        record.setType(request.getType());
+        record.setCategory(request.getCategory());
+        record.setDate(request.getDate());
+        record.setDescription(request.getDescription());
+
+        repository.save(record);
+
+        return mapToResponse(record);
+    }
 }

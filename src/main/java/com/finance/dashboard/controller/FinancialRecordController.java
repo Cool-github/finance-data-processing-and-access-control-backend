@@ -12,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Pageable;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/records")
 @RequiredArgsConstructor
@@ -47,6 +49,28 @@ public class FinancialRecordController {
                 .success(true)
                 .message("Dashboard fetched")
                 .data(service.getDashboard())
+                .build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<String> delete(@PathVariable UUID id) {
+        service.deleteRecord(id);
+        return ApiResponse.<String>builder()
+                .success(true)
+                .message("Record deleted")
+                .data(null)
+                .build();
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<FinancialRecordResponseDTO> update(
+            @PathVariable UUID id,
+            @RequestBody FinancialRecordRequestDTO request) {
+
+        return ApiResponse.<FinancialRecordResponseDTO>builder()
+                .success(true)
+                .message("Record updated")
+                .data(service.updateRecord(id, request))
                 .build();
     }
 }
