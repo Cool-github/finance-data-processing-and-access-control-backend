@@ -4,9 +4,12 @@ import com.finance.dashboard.dto.UserRequestDTO;
 import com.finance.dashboard.dto.UserResponseDTO;
 import com.finance.dashboard.entity.User;
 import com.finance.dashboard.enums.UserStatus;
+import com.finance.dashboard.exception.ResourceAlreadyExistsException;
 import com.finance.dashboard.repository.UserRepository;
 import com.finance.dashboard.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +18,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
     private final UserRepository userRepository;
 
     @Override
     public UserResponseDTO createUser(UserRequestDTO request) {
+
+        log.info("Creating user with email: {}", request.getEmail());
+
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            log.warn("User already exists with email: {}", request.getEmail());
+            throw new ResourceAlreadyExistsException("Email already exists");
+        }
 
         User user = User.builder()
                 .name(request.getName())
@@ -30,11 +42,16 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
+        log.info("User created successfully with id: {}", user.getId());
+
         return mapToResponse(user);
     }
 
     @Override
     public List<UserResponseDTO> getAllUsers() {
+
+        log.info("Fetching all users");
+
         return userRepository.findAll()
                 .stream()
                 .map(this::mapToResponse)
