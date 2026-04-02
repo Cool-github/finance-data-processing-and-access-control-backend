@@ -6,6 +6,7 @@ import com.finance.dashboard.dto.UserResponseDTO;
 import com.finance.dashboard.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class UserController {
 
     private final UserService userService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ApiResponse<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO request) {
         return ApiResponse.<UserResponseDTO>builder()
@@ -26,6 +28,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST')")
     @GetMapping
     public ApiResponse<List<UserResponseDTO>> getAllUsers() {
         return ApiResponse.<List<UserResponseDTO>>builder()
