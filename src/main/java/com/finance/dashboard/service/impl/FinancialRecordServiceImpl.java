@@ -7,6 +7,8 @@ import com.finance.dashboard.entity.FinancialRecord;
 import com.finance.dashboard.entity.User;
 import com.finance.dashboard.enums.Category;
 import com.finance.dashboard.enums.RecordType;
+import com.finance.dashboard.exception.ResourceNotFoundException;
+import com.finance.dashboard.exception.UnauthorizedException;
 import com.finance.dashboard.repository.FinancialRecordRepository;
 import com.finance.dashboard.repository.UserRepository;
 import com.finance.dashboard.service.FinancialRecordService;
@@ -141,11 +143,11 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
         UUID uid = UUID.fromString(userId);
 
         FinancialRecord record = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Record not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Record not found"));
 
         // Ensure user owns record
         if (!uid.equals(record.getUser().getId())) {
-            throw new RuntimeException("Access denied");
+            throw new UnauthorizedException("Access denied");
         }
 
         record.setDeleted(true);

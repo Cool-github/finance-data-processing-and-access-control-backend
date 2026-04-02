@@ -61,4 +61,24 @@ public class GlobalExceptionHandler {
                 .data(null)
                 .build();
     }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiResponse<String> handleNotFound(ResourceNotFoundException ex) {
+        return ApiResponse.<String>builder()
+                .success(false)
+                .message(ex.getMessage())
+                .data(null)
+                .build();
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiResponse<String> handleUnauthorized(UnauthorizedException ex) {
+        return ApiResponse.<String>builder()
+                .success(false)
+                .message(ex.getMessage())
+                .data(null)
+                .build();
+    }
 }
