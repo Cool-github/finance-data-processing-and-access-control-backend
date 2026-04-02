@@ -10,6 +10,7 @@ import com.finance.dashboard.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +20,8 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
+    private final PasswordEncoder passwordEncoder;
 
     private final UserRepository userRepository;
 
@@ -35,7 +38,7 @@ public class UserServiceImpl implements UserService {
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
-                .password(request.getPassword()) // later → encode
+                .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .status(UserStatus.ACTIVE)
                 .build();
