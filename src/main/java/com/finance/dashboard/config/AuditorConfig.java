@@ -3,6 +3,7 @@ package com.finance.dashboard.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 
@@ -11,7 +12,14 @@ public class AuditorConfig {
 
     @Bean
     public AuditorAware<String> auditorProvider() {
-        return () -> Optional.of("SYSTEM");
-        // Later → replace with logged-in user
+        return () -> {
+            var auth = SecurityContextHolder.getContext().getAuthentication();
+
+            if (auth == null || auth.getPrincipal() == null) {
+                return Optional.of("SYSTEM");
+            }
+
+            return Optional.of(auth.getPrincipal().toString());
+        };
     }
 }

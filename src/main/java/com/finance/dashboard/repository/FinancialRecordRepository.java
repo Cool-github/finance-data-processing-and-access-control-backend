@@ -35,4 +35,17 @@ public interface FinancialRecordRepository extends JpaRepository<FinancialRecord
     List<Object[]> getCategorySummary(UUID userId);
 
     List<FinancialRecord> findTop5ByUserIdAndIsDeletedFalseOrderByDateDesc(UUID userId);
+
+    Page<FinancialRecord> findByUserIdAndTypeAndIsDeletedFalse(
+            UUID userId,
+            RecordType type,
+            Pageable pageable
+    );
+
+    Page<FinancialRecord> findByUserIdAndCategoryAndIsDeletedFalse(
+            UUID userId,
+            Category category,
+            Pageable pageable
+    );
+
 }

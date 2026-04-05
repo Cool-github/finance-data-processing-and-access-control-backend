@@ -38,10 +38,10 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
 
         log.info("Creating financial record");
 
-        String userId = getCurrentUserId();
+        UUID uid = getCurrentUserId();
 
-        User user = userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         FinancialRecord record = FinancialRecord.builder()
                 .amount(request.getAmount())
@@ -69,20 +69,28 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
 
         log.info("Fetching financial records with pagination");
 
-        String userId = getCurrentUserId();
-        UUID uid = UUID.fromString(userId);
+        UUID uid = getCurrentUserId();
 
         if (type != null && category != null) {
             return repository
                     .findByUserIdAndTypeAndCategoryAndIsDeletedFalse(uid, type, category, pageable)
                     .map(this::mapToResponse);
+        } else if (type != null) {
+            return repository
+                    .findByUserIdAndTypeAndIsDeletedFalse(uid, type, pageable)
+                    .map(this::mapToResponse);
+        } else if (category != null) {
+            return repository
+                    .findByUserIdAndCategoryAndIsDeletedFalse(uid, category, pageable)
+                    .map(this::mapToResponse);
+        } else {
+            return repository
+                    .findByUserIdAndIsDeletedFalse(uid, pageable)
+                    .map(this::mapToResponse);
         }
-        return repository
-                .findByUserIdAndIsDeletedFalse(uid, pageable)
-                .map(this::mapToResponse);
     }
 
-    // 🔁 Mapper
+    // Mapper
     private FinancialRecordResponseDTO mapToResponse(FinancialRecord record) {
         return FinancialRecordResponseDTO.builder()
                 .id(record.getId())
@@ -94,25 +102,26 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
                 .build();
     }
 
-    private String getCurrentUserId() {
-        return (String) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+    private UUID getCurrentUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+            throw new UnauthorizedException("User not authenticated");
+        }
+
+        return UUID.fromString(auth.getName());
     }
 
     @Override
     public DashboardResponseDTO getDashboard() {
 
-        String userId = getCurrentUserId();
-        UUID uid = UUID.fromString(userId);
+        UUID uid = getCurrentUserId();
 
         Double income = repository.getTotalIncome(uid);
         Double expense = repository.getTotalExpense(uid);
 
         Double net = income - expense;
 
-        // 🔹 Category Summary
         var categoryData = repository.getCategorySummary(uid);
         Map<String, Double> categoryMap = new HashMap<>();
 
@@ -120,7 +129,7 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
             categoryMap.put(row[0].toString(), (Double) row[1]);
         }
 
-        // 🔹 Recent Transactions
+        // Recent Transactions
         var recent = repository
                 .findTop5ByUserIdAndIsDeletedFalseOrderByDateDesc(uid)
                 .stream()
@@ -139,12 +148,16 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
     @Override
     public void deleteRecord(UUID id) {
 
-        String userId = getCurrentUserId();
-        UUID uid = UUID.fromString(userId);
+        log.info("Updating record: {}", id);
+
+        UUID uid = getCurrentUserId();
 
         FinancialRecord record = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Record not found"));
 
+        if (record.isDeleted()) {
+            throw new ResourceNotFoundException("Record not found");
+        }
         // Ensure user owns record
         if (!uid.equals(record.getUser().getId())) {
             throw new UnauthorizedException("Access denied");
@@ -159,14 +172,19 @@ public class FinancialRecordServiceImpl implements FinancialRecordService {
     @Override
     public FinancialRecordResponseDTO updateRecord(UUID id, FinancialRecordRequestDTO request) {
 
-        String userId = getCurrentUserId();
-        UUID uid = UUID.fromString(userId);
+        log.info("Deleting record: {}", id);
+
+        UUID uid = getCurrentUserId();
 
         FinancialRecord record = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Record not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Record not found"));
+
+        if (record.isDeleted()) {
+            throw new ResourceNotFoundException("Record not found");
+        }
 
         if (!record.getUser().getId().equals(uid)) {
-            throw new RuntimeException("Access denied");
+            throw new UnauthorizedException("Access denied");
         }
 
         record.setAmount(request.getAmount());

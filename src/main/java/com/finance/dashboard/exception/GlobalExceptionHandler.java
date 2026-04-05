@@ -81,4 +81,14 @@ public class GlobalExceptionHandler {
                 .data(null)
                 .build();
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiResponse<String> handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ApiResponse.<String>builder()
+                .success(false)
+                .message(ex.getMessage())
+                .data(null)
+                .build();
+    }
 }

@@ -9,5 +9,7 @@ public interface UserService {
 
     UserResponseDTO createUser(UserRequestDTO request);
 
+    UserResponseDTO registerUser(UserRequestDTO request);
+
     List<UserResponseDTO> getAllUsers();
 }
